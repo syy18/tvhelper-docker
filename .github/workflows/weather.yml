@@ -1,0 +1,75 @@
+name: Weather Bot
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  weather:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.comment.body, '/weather')
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+          
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Process weather request
+        id: weather
+        run: |
+          # Extract argument from comment body
+          comment_body="${{ github.event.comment.body }}"
+          
+          # Run the weather helper script
+          weather_output=$(/bin/bash $GITHUB_WORKSPACE/scripts/weather_comment.sh "$comment_body" 2>/dev/null)
+          
+          # Extract the weather reply from the output
+          weather_reply=$(echo "$weather_output" | sed -n '/WEATHER_REPLY=/{s/WEATHER_REPLY=//;p}')
+          
+          # Set outputs for GitHub Actions
+          echo "weather_reply<<EOF" >> $GITHUB_OUTPUT
+          echo "$weather_reply" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Add reaction to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+            
+      - name: Post weather reply
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const replyBody = `${{ steps.weather.outputs.weather_reply }}`;
+            
+            if (context.payload.issue) {
+              // This is an issue comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: replyBody
+              });
+            } else if (context.payload.pull_request) {
+              // This is a pull request comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: replyBody
+              });
+            }
