@@ -62,18 +62,18 @@ resp=$(curl -fsS "${BASE_URL}?${PARAMS}") || { echo "Error: failed to query Open
 # parse and pretty print with jq
 out=$(printf '%s' "$resp" | jq -r '
   if (.current? // null) and (.hourly? // null) and (.hourly.time? // null) and (.hourly.precipitation_probability? // null) then
-    (.current.time // null) as $ct |
-    (.current.temperature_2m // null) as $temp |
-    (.current.apparent_temperature // null) as $feels |
-    (.current.relative_humidity_2m // null) as $rh |
-    (.current.wind_speed_10m // null) as $wind |
-    (.current.precipitation // null) as $precip |
+    (.current.time // empty) as $ct |
+    (.current.temperature_2m // empty) as $temp |
+    (.current.apparent_temperature // empty) as $feels |
+    (.current.relative_humidity_2m // empty) as $rh |
+    (.current.wind_speed_10m // empty) as $wind |
+    (.current.precipitation // empty) as $precip |
     # build hourly list with time and prob, defaulting null probs to 0
     ([ range(0; (.hourly.time | length)) as $i | {time: .hourly.time[$i], prob: ((.hourly.precipitation_probability[$i] // 0) // 0)} ]) as $items |
     ($items | map(select(.time >= $ct)) | .[:24]) as $next |
     (if ($next|length) > 0 then ($next | map(.prob) | max) else null end) as $maxp |
-    ($next | map(select(.prob >= 50)) | first | .time // null) as $next50time |
-    if ($ct|type) != "string" or ($temp == null) then
+    ($next | map(select(.prob >= 50)) | first | .time // empty) as $next50time |
+    if ($ct|type) != "string" or ($temp|type) == "null" then
       "__MISSING__"
     else
       ([ "Local time: " + $ct,
