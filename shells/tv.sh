@@ -719,10 +719,7 @@ update_sh() {
     fi
 }
 
-# 天气查询
-show_weather() {
-    /tvhelper/shells/weather.sh || echo "获取天气失败"
-}
+ 
 
 # 菜单
 menu_options=(
@@ -740,7 +737,6 @@ menu_options=(
     "显示Netflix影片码率"
     "模拟菜单键"
     "更新脚本"
-    "Weather (Shanghai)"
     "赞助|打赏"
 )
 
@@ -758,7 +754,6 @@ commands=(
     ["进入TVBox安装助手"]="enter_tvbox_helper"
     ["进入Sony电视助手"]="enter_sonytv"
     ["更新脚本"]="update_sh"
-    ["Weather (Shanghai)"]="show_weather"
     ["赞助|打赏"]="sponsor"
     ["替换系统桌面"]="replace_system_ui_menu"
 )

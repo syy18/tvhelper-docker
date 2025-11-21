@@ -1,8 +1,8 @@
 # 使用Alpine Linux作为基础镜像
 FROM alpine:latest
 
-# 安装ADB、Bash、Curl、OpenSSH服务以及jq
-RUN apk update && apk add --no-cache android-tools bash curl openssh libqrencode-tools jq \
+# 安装ADB、Bash、Curl、OpenSSH服务
+RUN apk update && apk add --no-cache android-tools bash curl openssh libqrencode-tools \
     && rm -rf /var/cache/apk/*
 
 # 配置SSH服务
@@ -17,9 +17,7 @@ RUN git clone https://github.com/wukongdaily/tvhelper-docker.git /tvhelper
 # 为 /tvhelper/shells 目录下所有.sh文件设置可执行权限
 RUN find /tvhelper/shells -type f -iname "*.sh" -exec chmod +x {} \;
 
-# 覆盖并添加本地weather.sh脚本
-COPY shells/weather.sh /tvhelper/shells/weather.sh
-RUN chmod +x /tvhelper/shells/weather.sh
+ 
 
 # 设置SSH服务以允许远程登录
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
